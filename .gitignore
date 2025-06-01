@@ -1,0 +1,9 @@
+# Ignorar node_modules
+node_modules/
+
+# Outras pastas comuns que você pode querer ignorar
+.expo/
+.expo-shared/
+dist/
+build/
+.env
