@@ -8,6 +8,8 @@ const RegistroScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [nome, setNome] = useState('');
+  const [idade, setIdade] = useState('');
+  const [livroFav, setLivro] = useState('');
 
   const handleRegister = async () => {
 
@@ -22,6 +24,8 @@ const RegistroScreen = ({ navigation }) => {
       await setDoc(doc(db, 'users', user.uid), {
         nome,
         email,
+        idade,
+        livroFav
       });
 
       Alert.alert('Sucesso!', 'Usuário cadastrado com sucesso!', [
@@ -49,12 +53,27 @@ const RegistroScreen = ({ navigation }) => {
         keyboardType="email-address"
         autoCapitalize="none"
       />
-      <TextInput
+
+        <TextInput
         style={styles.input}
         placeholder="Senha"
         value={senha}
         onChangeText={setSenha}
         secureTextEntry
+      />
+
+        <TextInput
+        style={styles.input}
+        placeholder="idade"
+        value={idade}
+        onChangeText={setIdade}
+      />
+
+        <TextInput
+        style={styles.input}
+        placeholder="Livro Favorito"
+        value={livroFav}
+        onChangeText={setLivro}
       />
       <Button title="Cadastrar" onPress={handleRegister} />
     </View>
