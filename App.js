@@ -6,6 +6,7 @@ import HomeScreen from './componentes/Home';
 import RegistroScreen from './componentes/Registro';
 import PerfilScreen from './componentes/Perfil';
 import SplashScreen from './componentes/SplashScreen';
+import bookForm from './componentes/bookForm';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,7 @@ export default function App() {
         <Stack.Screen name="Registro" component={RegistroScreen} options={{headerShow: false}}/>
         <Stack.Screen name="Home" component={HomeScreen} options={{headerLeft: ()=> null}}/>
         <Stack.Screen name="Perfil" component={PerfilScreen}/>
+        <Stack.Screen name="BookForm" component={bookForm}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
