@@ -16,7 +16,8 @@
     "firebase": "^11.8.1",
     "react": "18.3.1",
     "react-native": "0.76.9",
-    "react-native-image-picker": "^8.2.1"
+    "react-native-image-picker": "^8.2.1",
+    "expo-image-picker": "~16.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

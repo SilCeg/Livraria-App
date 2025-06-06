@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Ale
 import { signOut } from "firebase/auth";
 import { auth, db } from "./Firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function Perfil({ navigation }) {
   const [userData, setUserData] = useState(null);
@@ -48,58 +48,60 @@ export default function Perfil({ navigation }) {
     }
   };
 
-const pickImageAndUpload = async () => {
-  try {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      includeBase64: true,
-      quality: 1,
-    });
+  const pickImageAndUpload = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (result.didCancel) {
-      console.log('User cancelled image picker');
-      return;
-    }
+      if (permissionResult.granted === false) {
+        Alert.alert("Permissão necessária", "Permita acesso à galeria para alterar a foto.");
+        return;
+      }
 
-    if (result.errorCode) {
-      console.log('ImagePicker Error:', result.errorMessage);
-      return;
-    }
-
-    const base64Img = `data:image/jpg;base64,${result.assets[0].base64}`;
-
-    const data = {
-      file: base64Img,
-      upload_preset: 'preset_publico',
-      cloud_name: 'ddglrw9gv',
-    };
-
-    const res = await fetch('https://api.cloudinary.com/v1_1/ddglrw9gv/image/upload', {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: {
-        'content-type': 'application/json',
-      },
-    });
-
-    const json = await res.json();
-
-    if (json.secure_url) {
-      const user = auth.currentUser;
-      await updateDoc(doc(db, 'users', user.uid), {
-        photoURL: json.secure_url,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+        base64: true,
       });
 
-      setUserData(prev => ({ ...prev, photoURL: json.secure_url }));
-      Alert.alert('Sucesso', 'Foto de perfil atualizada!');
-    } else {
-      Alert.alert('Erro', 'Erro ao enviar imagem.');
+      if (!result.canceled) {
+        // ✅ Monta o base64 corretamente
+        const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
+
+        const data = {
+          file: base64Img,
+          upload_preset: 'preset_publico',
+          cloud_name: 'ddglrw9gv',
+        };
+
+        const res = await fetch('https://api.cloudinary.com/v1_1/ddglrw9gv/image/upload', {
+          method: 'POST',
+          body: JSON.stringify(data),
+          headers: {
+            'content-type': 'application/json',
+          },
+        });
+
+        const json = await res.json();
+        console.log('Cloudinary response:', json);  // ✅ para debug
+
+        if (json.secure_url) {
+          const user = auth.currentUser;
+          await updateDoc(doc(db, 'users', user.uid), {
+            photoURL: json.secure_url,
+          });
+
+          setUserData(prev => ({ ...prev, photoURL: json.secure_url }));
+          Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+        } else {
+          Alert.alert('Erro', 'Erro ao enviar imagem.');
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Algo deu errado ao tentar fazer o upload.');
     }
-  } catch (error) {
-    console.error(error);
-    Alert.alert('Erro', 'Algo deu errado ao tentar fazer o upload.');
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -127,9 +129,10 @@ const pickImageAndUpload = async () => {
         />
       </TouchableOpacity>
 
-      <Text style={styles.name}>{userData.nome}</Text>
-      <Text style={styles.email}>{userData.email}</Text>
-      <Text style={styles.idade}>ID: {userData.id || "Sem ID"}</Text>
+      <Text style={styles.name}>Olá, {userData.nome}</Text>
+      <Text style={styles.email}>Email: {userData.email}</Text>
+      <Text style={styles.idade}> {userData.idade || "Não informado"} anos </Text>
+      <Text style={styles.livro}>Livro Favorito: {userData.livroFav || "Não informado"}</Text>
 
       <TouchableOpacity style={styles.button} onPress={logout}>
         <Text style={styles.buttonText}>Sair</Text>
@@ -144,6 +147,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 24, fontWeight: "bold", color: "#333" },
   email: { fontSize: 16, color: "#666", marginTop: 4 },
   idade: { fontSize: 16, color: "#666", marginTop: 4 },
+  livro: { fontSize: 16, color: "#666", marginTop: 4 },
   button: {
     fontSize: 16,
     backgroundColor: "lightblue",
