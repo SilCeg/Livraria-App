@@ -61,44 +61,47 @@ export default function Perfil({ navigation }) {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         quality: 1,
-        base64: true,
       });
 
       if (!result.canceled) {
-        // ✅ Monta o base64 corretamente
-        const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        const image = result.assets[0];
 
-        const data = {
-          file: base64Img,
-          upload_preset: 'preset_publico',
-          cloud_name: 'ddglrw9gv',
-        };
+        const localUri = image.uri;
+        const filename = localUri.split("/").pop();
+        const match = /\.(\w+)$/.exec(filename || "");
+        const mimeType = match ? `image/${match[1]}` : `image`;
+
+        const formData = new FormData();
+        formData.append('file', {
+          uri: localUri,
+          type: mimeType,
+          name: filename || 'profile.jpg',
+        });
+        formData.append('upload_preset', 'preset_publico'); 
 
         const res = await fetch('https://api.cloudinary.com/v1_1/ddglrw9gv/image/upload', {
           method: 'POST',
-          body: JSON.stringify(data),
-          headers: {
-            'content-type': 'application/json',
-          },
+          body: formData,
         });
 
         const json = await res.json();
-        console.log('Cloudinary response:', json);  // ✅ para debug
+        console.log('Cloudinary response:', json);
 
         if (json.secure_url) {
           const user = auth.currentUser;
           await updateDoc(doc(db, 'users', user.uid), {
-            photoURL: json.secure_url,
+            fotoUrl: json.secure_url,
           });
 
-          setUserData(prev => ({ ...prev, photoURL: json.secure_url }));
+          setUserData(prev => ({ ...prev, fotoUrl: json.secure_url }));
           Alert.alert('Sucesso', 'Foto de perfil atualizada!');
         } else {
           Alert.alert('Erro', 'Erro ao enviar imagem.');
+          console.log('Erro Cloudinary:', json);
         }
       }
     } catch (error) {
-      console.error(error);
+      console.error('Erro geral no upload:', error);
       Alert.alert('Erro', 'Algo deu errado ao tentar fazer o upload.');
     }
   };
@@ -121,12 +124,12 @@ export default function Perfil({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* 👉 Clicável para abrir o picker */}
       <TouchableOpacity onPress={pickImageAndUpload}>
         <Image
-          source={{ uri: userData.photoURL || "https://randomuser.me/api/portraits/men/75.jpg" }}
+          source={{ uri: userData.fotoUrl || "https://randomuser.me/api/portraits/men/75.jpg" }}
           style={styles.avatar}
         />
+        <Text style={styles.changePhotoText}>Clique para alterar a foto</Text>
       </TouchableOpacity>
 
       <Text style={styles.name}>Olá, {userData.nome}</Text>
@@ -143,7 +146,8 @@ export default function Perfil({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: "center", paddingTop: 60, backgroundColor: "#fff" },
-  avatar: { width: 120, height: 120, borderRadius: 60, marginBottom: 20 },
+  avatar: { width: 120, height: 120, borderRadius: 60, marginBottom: 10 },
+  changePhotoText: { fontSize: 12, color: '#555', marginBottom: 20 },
   name: { fontSize: 24, fontWeight: "bold", color: "#333" },
   email: { fontSize: 16, color: "#666", marginTop: 4 },
   idade: { fontSize: 16, color: "#666", marginTop: 4 },

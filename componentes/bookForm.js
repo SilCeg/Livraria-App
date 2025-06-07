@@ -4,7 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function BookForm({ navigation }) {
   const route = useRoute();
-  const { id } = route.params || {}; // se existir, é edição
+  const { id } = route.params || {}; 
 
   const [formData, setFormData] = useState({
     nm_book: '',

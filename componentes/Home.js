@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Modal, Pressable } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Modal, Pressable, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const HomeScreen = ({ navigation }) => {
@@ -32,6 +32,26 @@ const HomeScreen = ({ navigation }) => {
     setSelectedBook(null);
   };
 
+const handleDelete = async () => {
+  try {
+    const response = await fetch(`https://webapptech.site/apilivraria/api/book/${selectedBook.id}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      Alert.alert('Sucesso', 'Livro excluído com sucesso!');
+      closeModal();
+      fetchBooks(); 
+    } else {
+      Alert.alert('Erro', 'Não foi possível excluir o livro.');
+    }
+  } catch (err) {
+    console.error('Erro ao excluir:', err);
+    Alert.alert('Erro', 'Erro inesperado ao excluir o livro.');
+  }
+};
+
+
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card} onPress={() => openModal(item)}>
       <Text style={styles.bookTitle}>{item.nm_book}</Text>
@@ -57,7 +77,7 @@ const HomeScreen = ({ navigation }) => {
         />
       )}
 
-      {/* Modal */}
+
       <Modal
         visible={!!selectedBook}
         transparent={true}
@@ -75,6 +95,24 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={styles.modalDescriptionTitle}>Descrição:</Text>
                 <Text style={styles.modalDescriptionText}>{selectedBook.desc_book}</Text>
 
+                
+                <Pressable
+  style={styles.actionButton}
+  onPress={() => {
+    closeModal();
+    navigation.navigate('EditarBook', { book: selectedBook });
+  }}
+>
+  <Text style={styles.actionButtonText}>Editar</Text>
+</Pressable>
+
+                <Pressable
+                  style={[styles.actionButton, { backgroundColor: 'red' }]}
+                  onPress={handleDelete}
+                >
+                  <Text style={styles.actionButtonText}>Excluir</Text>
+                </Pressable>
+
                 <Pressable style={styles.closeButton} onPress={closeModal}>
                   <Text style={styles.closeButtonText}>Fechar</Text>
                 </Pressable>
@@ -84,7 +122,6 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* Botão "+" */}
       <TouchableOpacity
         style={styles.fabAdd}
         onPress={() => navigation.navigate('BookForm')}
@@ -92,7 +129,6 @@ const HomeScreen = ({ navigation }) => {
         <Ionicons name="add" size={30} color="#fff" />
       </TouchableOpacity>
 
-      {/* Botão "Perfil" (ícone de usuário) */}
       <TouchableOpacity
         style={styles.fabProfile}
         onPress={() => navigation.navigate('Perfil')}
@@ -185,6 +221,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold'
   },
+  actionButton: {
+    marginTop: 10,
+    backgroundColor: '#28A745',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontWeight: 'bold'
+  },
   fabAdd: {
     position: 'absolute',
     left: 20,
@@ -201,7 +248,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     bottom: 20,
-    backgroundColor: '#28A745', // cor verde para diferenciar (pode trocar)
+    backgroundColor: '#28A745',
     width: 60,
     height: 60,
     borderRadius: 30,
